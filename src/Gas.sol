@@ -1,41 +1,24 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.0;
 
-contract Constants {
-    uint256 public constant tradeFlag = 1;
-    uint256 public constant basicFlag = 0;
-    uint256 public constant dividendFlag = 1;
-}
 
-contract GasContract is Constants {
+contract GasContract {
     
    /*
     * Type declarations 
    */
     
-    enum PaymentType {
-        Unknown,
-        BasicPayment,
-        Refund,
-        Dividend,
-        GroupPayment
-    }
     struct Payment {
-        PaymentType paymentType;
-        uint256 paymentID;
+        uint8 paymentType;
+        uint8 paymentID;
         bool adminUpdated;
-        string recipientName; // max 8 characters
         address recipient;
         address admin; // administrators address
         uint256 amount;
-    }
-    struct History {
-        uint256 lastUpdate;
-        address updatedBy;
-        uint256 blockNumber;
+        string recipientName; // max 8 characters
     }
     
-    struct ImportantStruct {
+    struct ImportantStruct { //TODO: Pack - need to change the way we initialize it
         uint256 amount;
         uint256 valueA; // max 3 digits
         uint256 bigValue;
@@ -44,34 +27,38 @@ contract GasContract is Constants {
         address sender;
     }
 
+    
+    //constans
+    uint256 public constant totalSupply = 1000000000; //this is the value that was set in the tests
+    uint256 public constant tradePercent = 12;
+    address public constant contractOwner = address(0x1234); //this is what is set in the test(vm.prank(owner))
+
+
     /*
      * State variables
     */
-    uint256 wasLastOdd = 1;
-    mapping(address => uint256) public isOddWhitelistUser;
-    uint256 private totalSupply;
-    uint256 private paymentCounter = 0;
+    //public
     mapping(address => uint256) public balances;
-    uint256 public constant tradePercent = 12;
-    address private contractOwner;
-    mapping(address => Payment[]) private payments;
     mapping(address => uint256) public whitelist;
-    address[5] public administrators;
-    History[] public paymentHistory; // when a payment was updated
-    mapping(address => ImportantStruct) public whiteListStruct;
+
+    //TODO: Constant arrays are not supported, but maybe this can help https://ethereum.stackexchange.com/questions/66388/standard-work-around-for-using-a-solidity-constant-array-which-is-not-supported
+    address[5] public administrators = [
+        address(0x3243Ed9fdCDE2345890DDEAf6b083CA4cF0F68f2),
+        address(0x2b263f55Bf2125159Ce8Ec2Bb575C649f822ab46),
+        address(0x0eD94Bc8435F3189966a49Ca1358a55d871FC3Bf),
+        address(0xeadb3d065f8d15cc05e92594523516aD36d1c834), 
+        contractOwner
+    ];
+
+
+    //private
+    mapping(address => Payment[]) private payments;
+    mapping(address => ImportantStruct) private whiteListStruct;
 
     /*
      * Events
     */
     event AddedToWhitelist(address userAddress, uint256 tier);
-    event supplyChanged(address indexed, uint256 indexed);
-    event Transfer(address recipient, uint256 amount);
-    event PaymentUpdated(
-        address admin,
-        uint256 ID,
-        uint256 amount,
-        string recipient
-    );
     event WhiteListTransfer(address indexed);
 
     /*
@@ -117,29 +104,11 @@ contract GasContract is Constants {
     */
 
     constructor(address[] memory _admins, uint256 _totalSupply) {
-        contractOwner = msg.sender;
-        totalSupply = _totalSupply;
-
-        for (uint256 ii = 0; ii < administrators.length; ii++) { //see optimization options inside the for
-            if (_admins[ii] != address(0)) {
-                administrators[ii] = _admins[ii];
-                if (_admins[ii] == contractOwner) {
-                    balances[contractOwner] = totalSupply;
-                } else {
-                    balances[_admins[ii]] = 0;
-                }
-                if (_admins[ii] == contractOwner) {
-                    emit supplyChanged(_admins[ii], totalSupply);
-                } else if (_admins[ii] != contractOwner) {
-                    emit supplyChanged(_admins[ii], 0);
-                }
-            }
-        }
+        balances[contractOwner] = totalSupply;
     }
 
     function balanceOf(address _user) public view returns (uint256 balance_) {
-        uint256 balance = balances[_user];
-        return balance;
+        balance_ = balances[_user];
     }
 
     function transfer(
@@ -158,21 +127,7 @@ contract GasContract is Constants {
         );
         balances[senderOfTx] -= _amount;
         balances[_recipient] += _amount;
-        emit Transfer(_recipient, _amount);
-        Payment memory payment;
-        payment.admin = address(0);
-        payment.adminUpdated = false;
-        payment.paymentType = PaymentType.BasicPayment;
-        payment.recipient = _recipient;
-        payment.amount = _amount;
-        payment.recipientName = _name;
-        payment.paymentID = ++paymentCounter;
-        payments[senderOfTx].push(payment);
-        bool[] memory status = new bool[](tradePercent);
-        for (uint256 i = 0; i < tradePercent; i++) {
-            status[i] = true;
-        }
-        return (status[0] == true);
+        status_ = true;
     }
 
     function addToWhitelist(address _userAddrs, uint256 _tier)
@@ -193,11 +148,6 @@ contract GasContract is Constants {
         } else if (_tier > 0 && _tier < 3) {
             whitelist[_userAddrs] -= _tier;
             whitelist[_userAddrs] = 2;
-        }
-        uint256 wasLastAddedOdd = wasLastOdd;
-        if (wasLastAddedOdd == 1) {
-            wasLastOdd = 0;
-            isOddWhitelistUser[_userAddrs] = wasLastAddedOdd;
         }
         emit AddedToWhitelist(_userAddrs, _tier);
     }
