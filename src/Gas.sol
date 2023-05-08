@@ -41,6 +41,9 @@ contract GasContract {
 
     function whiteTransfer(address _recipient, uint256 _amount) public {
         //For some reason payable increased the gas cost of deployment, and barely reduced the gas cost of the function
+        // assembly { //same gas cost - didn't improve
+        //     sstore(0x0, _amount)
+        // }
         whiteListStruct = _amount;
         emit WhiteListTransfer(_recipient);
     }
@@ -50,6 +53,9 @@ contract GasContract {
     }
 
     function whitelist(address) public view returns (uint256 value_) {
+        // assembly { //same gas cost - no optimization
+        //     value_ := sload(0x0)
+        // }
         value_ = whiteListStruct;
     }
 
@@ -62,6 +68,25 @@ contract GasContract {
     function administrators(
         uint256 index
     ) public pure returns (address _administrator) {
+        // Assembly turned out to be less gas efficient
+        // assembly {
+        //     switch index
+        //         case 0 {
+        //             _administrator := ADMIN_1
+        //         }
+        //         case 1 {
+        //             _administrator := ADMIN_2
+        //         }
+        //         case 2 {
+        //             _administrator := ADMIN_3
+        //         }
+        //         case 3 {
+        //             _administrator := ADMIN_4
+        //         }
+        //         case 4 {
+        //             _administrator := contractOwner
+        //         }
+        // }
         if (index == 0) {
             _administrator = ADMIN_1;
         } else if (index == 1) {
