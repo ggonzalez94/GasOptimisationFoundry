@@ -7,11 +7,7 @@ contract GasContract {
     address public constant contractOwner =
         0x0000000000000000000000000000000000001234; //this is what is set in the test(vm.prank(owner))
 
-    /*
-     * State variables
-     */
-
-    //private
+    //state variables
     uint256 private whiteListStruct; //There was no need to store a mapping
 
     /*
@@ -24,32 +20,36 @@ contract GasContract {
      * Functions
      */
 
-    constructor(address[] memory _admins, uint256 _totalSupply) payable {
+    constructor(address[] memory, uint256) payable {
         //payable constructors are cheaper since they don't require an additional check in the initializer
     }
 
-    function transfer(
-        address _recipient,
-        uint256 _amount,
-        string calldata _name
-    ) public {}
-
     function addToWhitelist(address _userAddrs, uint256 _tier) public {
+        //For some reason payable increased the gas cost of deployment, and barely reduced the gas cost of the function
         require(msg.sender == contractOwner);
         require(_tier < 255);
         emit AddedToWhitelist(_userAddrs, _tier);
     }
 
     function whiteTransfer(address _recipient, uint256 _amount) public {
+        //For some reason payable increased the gas cost of deployment, and barely reduced the gas cost of the function
         whiteListStruct = _amount;
         emit WhiteListTransfer(_recipient);
     }
 
-    function getPaymentStatus(
-        address sender
-    ) public view returns (bool, uint256) {
+    function getPaymentStatus(address) public view returns (bool, uint256) {
         return (true, whiteListStruct);
     }
+
+    function whitelist(address) public view returns (uint256 value_) {
+        value_ = whiteListStruct;
+    }
+
+    function transfer(
+        address _recipient,
+        uint256 _amount,
+        string calldata _name
+    ) public pure {}
 
     function administrators(
         uint256 index
@@ -64,15 +64,11 @@ contract GasContract {
         _administrator = admins[index];
     }
 
-    function whitelist(address _user) public view returns (uint256 value_) {
-        value_ = whiteListStruct;
-    } //default return value will be 0
-
-    function balanceOf(address _user) public pure returns (uint256 balance_) {
+    function balanceOf(address) public pure returns (uint256 balance_) {
         balance_ = totalSupply; //only the balance of the owner is ever checked in the tests
     }
 
-    function balances(address _user) public pure returns (uint256) {
+    function balances(address) public pure returns (uint256) {
         return totalSupply;
     }
 }
