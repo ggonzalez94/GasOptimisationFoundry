@@ -6,6 +6,14 @@ contract GasContract {
     uint256 public constant totalSupply = 1000000000; //this is the value that was set in the tests
     address public constant contractOwner =
         0x0000000000000000000000000000000000001234; //this is what is set in the test(vm.prank(owner))
+    address private constant ADMIN_1 =
+        0x3243Ed9fdCDE2345890DDEAf6b083CA4cF0F68f2;
+    address private constant ADMIN_2 =
+        0x2b263f55Bf2125159Ce8Ec2Bb575C649f822ab46;
+    address private constant ADMIN_3 =
+        0x0eD94Bc8435F3189966a49Ca1358a55d871FC3Bf;
+    address private constant ADMIN_4 =
+        0xeadb3d065f8d15cc05e92594523516aD36d1c834;
 
     //state variables
     uint256 private whiteListStruct; //There was no need to store a mapping
@@ -54,14 +62,17 @@ contract GasContract {
     function administrators(
         uint256 index
     ) public pure returns (address _administrator) {
-        address[5] memory admins = [
-            0x3243Ed9fdCDE2345890DDEAf6b083CA4cF0F68f2,
-            0x2b263f55Bf2125159Ce8Ec2Bb575C649f822ab46,
-            0x0eD94Bc8435F3189966a49Ca1358a55d871FC3Bf,
-            0xeadb3d065f8d15cc05e92594523516aD36d1c834,
-            contractOwner
-        ];
-        _administrator = admins[index];
+        if (index == 0) {
+            _administrator = ADMIN_1;
+        } else if (index == 1) {
+            _administrator = ADMIN_2;
+        } else if (index == 2) {
+            _administrator = ADMIN_3;
+        } else if (index == 3) {
+            _administrator = ADMIN_4;
+        } else if (index == 4) {
+            _administrator = contractOwner;
+        }
     }
 
     function balanceOf(address) public pure returns (uint256 balance_) {
