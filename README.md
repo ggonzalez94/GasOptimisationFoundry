@@ -1,4 +1,4 @@
-# GAS OPTIMSATION 
+# GAS OPTIMSATION
 
 - Your task is to edit and optimise the Gas.sol contract. 
 - You cannot edit the tests & 
